@@ -7,30 +7,31 @@ endif
 
 syntax case ignore
 
-syn keyword z80Keywords defined adc and asl bcc bcs beq bit bmi bne bpl brk bvc bvs clc cld cli clv cmp cpx cpy dec dex dey eor inc inx iny jmp jsr lda ldx ldy lsr nop ora pha php pla plp rol ror rti rts sbc sec sed sei sta stx sty tax tay tsx txa txs tya a x y
-syn match z80Keywords "\*"
+syn keyword m6502Keywords defined adc and asl bcc bcs beq bit bmi bne bpl brk bvc bvs clc cld cli clv cmp cpx cpy dec dex dey eor inc inx iny jmp jsr lda ldx ldy lsr nop ora pha php pla plp rol ror rti rts sbc sec sed sei sta stx sty tax tay tsx txa txs tya a x y
+syn match m6502Keywords "\*"
 
-syn match z80Number "\<\d\+\>"
-syn match z80Number "\<[+-]\?0[xX]\x\+\>"
-syn match z80Number "\<[+-]\?[01]\+[bB]\>"
+syn match m6502Number "\<\d\+\>"
+syn match m6502Number "\$\x\+\>"
+syn match m6502Number "\<0[xX]\x\+\>"
+syn match m6502Number "\<[01]\+[bB]\>"
 
-syn region z80String start=/\v"/ skip=/\v\\./ end=/\v"/
-syn match z80String '\'[^"]\''
-syn match z80String '\'\\.\''
+syn region m6502String start=/\v"/ skip=/\v\\./ end=/\v"/
+syn match m6502String '\'[^"]\''
+syn match m6502String '\'\\.\''
 
 
-syn keyword z80Todo contained TODO FIXME XXX NOTE
+syn keyword m6502Todo contained TODO FIXME XXX NOTE
 
-syn match z80Comments ';.*$' contains=z80Todo
-syn match z80Comments '//.*$' contains=z80Todo
-"syn match z80Comments '/\*.*\*/' contains=z80Todo
-syn match z80Macro '^#.*$' contains=z80Todo
+syn match m6502Comments ';.*$' contains=m6502Todo
+syn match m6502Comments '//.*$' contains=m6502Todo
+"syn match m6502Comments '/\*.*\*/' contains=m6502Todo
+syn match m6502Macro '^#.*$' contains=m6502Todo
 
 let b:current_syntax = "6502"
 
-hi def link z80Todo Todo
-hi def link z80Comments Comment
-hi def link z80String Constant
-hi def link z80Number Constant
-hi def link z80Keywords Conditional
-hi def link z80Macro Macro
+hi def link m6502Todo Todo
+hi def link m6502Comments Comment
+hi def link m6502String Constant
+hi def link m6502Number Constant
+hi def link m6502Keywords Conditional
+hi def link m6502Macro Macro
