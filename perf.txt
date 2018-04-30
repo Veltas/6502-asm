@@ -1,0 +1,35 @@
+IRQ-disabled writing constant byte throughput:
+oric atmos  8.00us   (sta, iny)
+spectrum    1.57us   (push) 5.1 times as fast
+
+transfer throughput:
+oric atmos 13.00us   (lda, sta, iny)
+spectrum    4.57us   (ldi) 2.6 times as fast
+
+writing constant byte (to fixed dest) throughput:
+oric atmos  4.00us   (sta)
+spectrum    1.57us   (push) 2.5 times as fast
+
+write ascending numbers throughput:
+oric atmos  9.00us   (lda, iny, tya)
+spectrum    4.86us   (ld, inc, inc) 1.9 times as fast
+
+writing constant byte throughput:
+oric atmos  8.00us   (sta, iny)
+spectrum    4.57us   (ldi) 1.8 times as fast
+
+minimal subroutine call + return cost:
+oric atmos 12.00us   (jsr, rts)
+spectrum    7.71us   (call, ret) 1.6 times as fast
+
+load byte from fixed near stack position into accumulator:
+oric atmos  7.00us   (ldy, lda)
+spectrum    5.43us   (ld) 1.3 times as fast
+
+load accumulator with fixed value:
+oric atmos  2.00us   (lda)
+spectrum    2.00us   (ld) same speed
+
+push + pull the accumulator:
+oric atmos  7.00us   (pha, pla)
+spectrum    9.43us   (push, inc, dec, pop) 1.3 times slower
