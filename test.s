@@ -2,38 +2,60 @@
 
 	.zero
 
-; 8 16-bit pseudo-registers
-reg0:
-	.dsb 2
-reg1
-	.dsb 2
-reg2
-	.dsb 2
-reg3
-	.dsb 2
-reg4
-	.dsb 2
-reg5
-	.dsb 2
-reg6
-	.dsb 2
-reg7
-	.dsb 2
+; reg0-reg3: scratch registers
+reg0	.dsb 2
+reg1	.dsb 2
+reg2	.dsb 2
+reg3	.dsb 2
 
-; 8-bit register reserved for use by pseudo-instructions
-tmp
-	.dsb 1
+; reg4-reg7: preserved by calls?
+reg4	.dsb 2
+reg5	.dsb 2
+reg6	.dsb 2
+reg7	.dsb 2
+
+; 8-bit register reserved for use by pseudo-instructions?
+tmp	.dsb 1
 
 ; 16-bit Data Stack Pointer
-dsp
-	.dsb 2
+dsp	.dsb 2
 
-; 16-bit Data stack Base Pointer
-dbp
-	.dsb 2
+; 16-bit Data stack Base Pointer, preserved by calls ?
+dbp	.dsb 2
+
+; Calling convention:
+; ===================
+; Receiving a call, arguments will be in-order given in reg0-reg3, 8-bit
+; arguments are packed but 16-bit arguments always fit into an actual register,
+; so: reg0 = AA, reg1 = BC, reg2 = D-, reg3 = EE is the correct arrangement for
+; arguments: (16-bit A, 8-bit B, 8-bit C, 8-bit D, 16-bit E). This arrangement
+; shows the actual byte order in zero-page memory, so reg2 contains D in its
+; LSB.
+;
+; Arguments that won't fit in a register are available on the stack in-order.
+; When registers are exhausted by arguments the remaining arguments are
+; available on the stack in-order.
+;
+; Caller is responsible for cleaning stack after a call with stack arguments.
+;
+; The convention changes if the function has runtime dynamic argument count
+; (variadic): the first argument is given as normal, e.g. in a register or on
+; stack if larger than 2 bytes, then the rest of arguments are given on the
+; stack. Also, the callee is responsible for cleaning the stack.
+;
+; Return value:
+; void          - No convention needed.
+; 8-bit/16-bit  - Stored in reg0, MSB is indeterminate on 8-bit return.
+; 24-bit/32-bit - Stored in reg0+reg1, MSB of reg1 is indet. on 24-bit return.
+; larger        - If non-variadic & stack-passed params are large enough, store
+;                 at the end of (top of) stack param space.
+;               - If non-variadic & stack-passed params are not large enough,
+;                 increase stack-passed area to match size of return value and
+;                 store there.
+;               - If variadic, callee cleans stack then puts result on stack.
 
 #define PROG_START $200
-#define DSP_START  $FF00
+#define DSP_START  $8000
 
 ; Startup code, wherever that needs to go
 	.text
@@ -47,13 +69,25 @@ startup
 	inx
 	sta dsp, x
 
-	; transfer16_zp(reg0, reg1)
-	lda #< reg0
-	jsr push_a
-	lda #< reg1
-	jsr push_a
-	jsr transfer16_zero
-	jsr inc2_dsp
+	; transfer16_zp(reg4, reg5)
+	lda #reg4
+	sta reg0
+	lda #reg5
+	sta reg0+1
+	jsr transfer16_zp
+
+	; memset($30d2, 0, 32)
+	lda #< $30d2
+	sta reg0
+	lda #> $30d2
+	sta reg0+1
+	lda #0
+	sta reg1
+	sta reg1+1
+	lda #< 32
+	sta reg2
+	lda #> 32
+	sta reg2+1
 
 	; don't exit
 	jmp *
@@ -188,14 +222,10 @@ inc2_dsp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	.text
 transfer16_zp
-	ldy #0
-	lda (dsp), y ; load source ZP address
-	tax
-	iny
-	lda (dsp), y ; load dest ZP address
-	tay
-	lda #0, x
-	sta #0, y
+	ldx reg0 ; load source ZP address
+	ldy reg0+1 ; load dest ZP address
+	lda 0, x
+	sta 0, y
 	rts
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -204,30 +234,13 @@ transfer16_zp
 	.text
 memset
 .(
-	; dest -> reg0
-	ldy #0
-	lda (dsp), y
-	sta reg0
-	iny
-	lda (dsp), y
-	sta reg0+1
+	; store dest
+	jsr push_reg0
 
-	; c -> reg1
-	iny
-	lda (dsp), y
-	sta reg1
-
-	; n -> reg2
-	ldy #4
-	lda (dsp), y
-	sta reg2
-	iny
-	lda (dsp), y
-	sta reg2+1
-
+	; for (; n != 0; --n, ++dest)
+	; on first loop:
 	; 0 -> y
-	; reg1 -> a
-	; for (; reg2 != 0; --reg2, ++reg0)
+	; c -> a
 	lda reg2
 	bne not_zero
 	lda reg2+1
@@ -236,10 +249,10 @@ not_zero
 	ldy #0
 	lda reg1
 loop_start
-		; a -> (reg0)
+		; a -> (dest)
 		sta (reg0), y
 
-		; reg2-1 -> reg2
+		; --n
 		ldx reg2
 		bne dec_no_carry
 		dec reg2+1
@@ -252,18 +265,13 @@ dec_no_carry
 		beq loop_end
 loop_cont
 
-		; reg0+1 -> reg0
+		; ++dest
 		inc reg0
 		bne loop_start
 		inc reg0+1
 		bne loop_start
 loop_end
 	; return dest
-	ldy #0
-	lda (dsp), y
-	sta reg0
-	ldy #1
-	lda (dsp), y
-	sta reg0+1
+	jsr pull_reg0
 	rts
 .)
