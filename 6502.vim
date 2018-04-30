@@ -27,7 +27,6 @@ syn keyword m6502Todo contained TODO FIXME XXX NOTE
 syn region m6502Comments start=/\v\/\*/ end=/\v\*\// contains=m6502Todo
 syn match m6502Comments ';.*$' contains=m6502Todo
 syn match m6502Comments '//.*$' contains=m6502Todo
-"syn match m6502Comments '/\*.*\*/' contains=m6502Todo
 syn match m6502Macro '^#.*$' contains=m6502Todo
 
 let b:current_syntax = "6502"
