@@ -78,15 +78,16 @@ syn match m6502String '\'\\.\''
 syn keyword m6502Todo contained TODO FIXME XXX NOTE
 
 syn region m6502Comments start="\/\*" end="\*\/" contains=m6502Todo
-syn match m6502Comments ';.*$' contains=m6502Todo
 syn match m6502Comments '//.*$' contains=m6502Todo
+syn match m6502AsmComments ';.*$' contains=m6502Todo
 
-syn region m6502Macro start="^#" skip="\\$" end="$" contains=m6502Todo
+syn region m6502Macro start="^#" skip="\\$" end="$" contains=m6502Todo,m6502Comments
 
 let b:current_syntax = "6502"
 
 hi def link m6502Todo Todo
 hi def link m6502Comments Comment
+hi def link m6502AsmComments Comment
 hi def link m6502String Constant
 hi def link m6502Special Special
 hi def link m6502Page Special
