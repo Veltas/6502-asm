@@ -1,3 +1,7 @@
+16-bit register-register addition:
+oric atmos 20.00us   (lda, clc, adc, sta, lda, adc, sta)
+spectrum    3.14us   (add) 6.4 times as fast
+
 IRQ-disabled writing constant byte throughput:
 oric atmos  8.00us   (sta, iny)
 spectrum    1.57us   (push) 5.1 times as fast
@@ -10,6 +14,10 @@ writing constant byte (to fixed dest) throughput:
 oric atmos  4.00us   (sta)
 spectrum    1.57us   (push) 2.5 times as fast
 
+adding a fixed 16-bit value to a 16-bit number in memory:
+oric atmos 30.00us   (ldy, lda, clc, adc, sta, lda, adc, sta)
+spectrum   13.71us   (ld, add, ld, inc, ld, adc, ld) 2.2 times as fast
+
 write ascending numbers throughput:
 oric atmos  9.00us   (lda, iny, tya)
 spectrum    4.86us   (ld, inc, inc) 1.9 times as fast
@@ -21,6 +29,10 @@ spectrum    4.57us   (ldi) 1.8 times as fast
 minimal subroutine call + return cost:
 oric atmos 12.00us   (jsr, rts)
 spectrum    7.71us   (call, ret) 1.6 times as fast
+
+adding a fixed 16-bit value to a fixed 16-bit number in memory:
+oric atmos 22.00us   (lda, clc, adc, sta, lda, adc, sta)
+spectrum   15.14us   (ld, ld, add, ld) 1.5 times as fast
 
 load byte from fixed near stack position into accumulator:
 oric atmos  7.00us   (ldy, lda)
