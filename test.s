@@ -183,9 +183,9 @@ inc2_dsp
 	rts
 
 ; transfers 16-bit contents of zero page $1 to zero page $2
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; void transfer16_zp(Byte r1, Byte r2) ;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	.text
 transfer16_zp
 	ldy #0
@@ -252,7 +252,7 @@ dec_no_carry
 		beq loop_end
 loop_cont
 
-		; loop step
+		; reg0+1 -> reg0
 		inc reg0
 		bne loop_start
 		inc reg0+1
