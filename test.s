@@ -197,3 +197,73 @@ transfer16_zp
 	lda #0, x
 	sta #0, y
 	rts
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; void *memset(void *dest, int c, size_t n) ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	.text
+memset
+.(
+	; dest -> reg0
+	ldy #0
+	lda (dsp), y
+	sta reg0
+	iny
+	lda (dsp), y
+	sta reg0+1
+
+	; c -> reg1
+	iny
+	lda (dsp), y
+	sta reg1
+
+	; n -> reg2
+	ldy #4
+	lda (dsp), y
+	sta reg2
+	iny
+	lda (dsp), y
+	sta reg2+1
+
+	; 0 -> y
+	; reg1 -> a
+	; for (; reg2 != 0; --reg2, ++reg0)
+	lda reg2
+	bne not_zero
+	lda reg2+1
+	beq loop_end
+not_zero
+	ldy #0
+	lda reg1
+loop_start
+		; a -> (reg0)
+		sta (reg0), y
+
+		; reg2-1 -> reg2
+		ldx reg2
+		bne dec_no_carry
+		dec reg2+1
+dec_no_carry
+		dec reg2
+
+		; loop condition
+		bne loop_cont
+		ldx reg2+1
+		beq loop_end
+loop_cont
+
+		; loop step
+		inc reg0
+		bne loop_start
+		inc reg0+1
+		bne loop_start
+loop_end
+	; return dest
+	ldy #0
+	lda (dsp), y
+	sta reg0
+	ldy #1
+	lda (dsp), y
+	sta reg0+1
+	rts
+.)
