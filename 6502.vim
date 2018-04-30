@@ -14,6 +14,8 @@ syn match m6502Number "\<\d\+\>"
 syn match m6502Number "\$\x\+\>"
 syn match m6502Number "\<0[xX]\x\+\>"
 syn match m6502Number "\<[01]\+[bB]\>"
+syn match m6502Number "&[0-7]\+\>"
+syn match m6502Number "%[01]\+\>"
 
 syn region m6502String start=/\v"/ skip=/\v\\./ end=/\v"/
 syn match m6502String '\'[^"]\''
@@ -22,6 +24,7 @@ syn match m6502String '\'\\.\''
 
 syn keyword m6502Todo contained TODO FIXME XXX NOTE
 
+syn region m6502Comments start=/\v\/\*/ end=/\v\*\// contains=m6502Todo
 syn match m6502Comments ';.*$' contains=m6502Todo
 syn match m6502Comments '//.*$' contains=m6502Todo
 "syn match m6502Comments '/\*.*\*/' contains=m6502Todo
