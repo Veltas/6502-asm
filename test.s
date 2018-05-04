@@ -2,6 +2,8 @@
 
 	.zero
 
+	*= $50
+
 ; reg0-reg3: scratch registers
 reg0	.dsb 2
 reg1	.dsb 2
@@ -54,43 +56,54 @@ dbp	.dsb 2
 ;                 store there.
 ;               - If variadic, callee cleans stack then puts result on stack.
 
-#define PROG_START $200
-#define DSP_START  $8000
+#define DSP_START  $9800
 
 ; Startup code, wherever that needs to go
 	.text
 	* = PROG_START
 startup
 	; DSP_START -> dsp
-	ldx #0
 	lda #< DSP_START
-	sta dsp, x
+	sta dsp
 	lda #> DSP_START
-	inx
-	sta dsp, x
+	sta dsp+1
 
-	; transfer16_zp(reg4, reg5)
-	lda #reg4
+	; clear a line on the screen
+	; memset($BBD0, ' ', 40)
+	lda #< $BBD0
 	sta reg0
-	lda #reg5
+	lda #> $BBD0
 	sta reg0+1
-	jsr transfer16_zp
-
-	; memset($30d2, 0, 32)
-	lda #< $30d2
-	sta reg0
-	lda #> $30d2
-	sta reg0+1
-	lda #0
+	lda # " "
 	sta reg1
-	sta reg1+1
-	lda #< 32
+	lda #< 40
 	sta reg2
-	lda #> 32
+	lda #> 40
 	sta reg2+1
+	jsr memset
 
-	; don't exit
-	jmp *
+	; write "Hello, world!" to screen
+	; memcpy($BBD2, hello_world, 13)
+	lda #< $BBD2
+	sta reg0
+	lda #> $BBD2
+	sta reg0+1
+	lda #< hello_world
+	sta reg1
+	lda #> hello_world
+	sta reg1+1
+	lda #< 13
+	sta reg2
+	lda #> 13
+	sta reg2+1
+	jsr memcpy
+
+	; end
+	rts
+
+	.text
+hello_world
+	.asc "Hello, world!"
 
 ; pushes A onto data stack
 	.text
@@ -130,12 +143,12 @@ carry
 	.text
 push_reg0
 	; dsp-2 -> dsp
-	clc
+	sec
 	lda dsp
-	adc #2
+	sbc #2
 	sta dsp
 	lda dsp+1
-	adc #0
+	sbc #0
 	sta dsp+1
 	; reg0 -> (dsp)
 	ldy #0
@@ -183,7 +196,7 @@ carry
 ; decrement data stack pointer by two
 	.text
 dec2_dsp
-	clc
+	sec
 	lda dsp
 	sbc #2
 	sta dsp
@@ -214,18 +227,6 @@ inc2_dsp
 	lda dsp+1
 	adc #0
 	sta dsp+1
-	rts
-
-; transfers 16-bit contents of zero page $1 to zero page $2
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; void transfer16_zp(Byte r1, Byte r2) ;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	.text
-transfer16_zp
-	ldx reg0 ; load source ZP address
-	ldy reg0+1 ; load dest ZP address
-	lda 0, x
-	sta 0, y
 	rts
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -273,5 +274,102 @@ loop_cont
 loop_end
 	; return dest
 	jsr pull_reg0
+	rts
+.)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; char *strcpy(char *dest, const char *src) ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	.text
+strcpy
+.(
+	lda reg0
+	sta reg2
+	lda reg0+1
+	sta reg2+1
+
+	ldy #0
+	sec
+loop
+	; transfer character
+	lda (reg1),y
+	sta (reg0),y
+	; stop if nul character
+	beq loop_end
+	; increment pointers, loop
+	inc reg0
+	bne skip_inc
+	inc reg0+1
+skip_inc
+	inc reg1
+	bne loop
+	inc reg1+1
+	bcs loop
+loop_end
+
+	lda reg2
+	sta reg0
+	lda reg2+1
+	sta reg0+1
+	rts
+.)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; void *memcpy(void *dest, const void *src, size_t n) ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+memcpy
+.(
+	; return immediately if n is zero
+	lda reg2
+	bne not_zero
+	lda reg2+1
+	bne not_zero
+	rts
+not_zero
+
+	; save original dest
+	lda reg0
+	sta reg3
+	lda reg0+1
+	sta reg3+1
+
+	sec
+	ldy #0
+loop
+	; transfer
+	lda (reg1),y
+	sta (reg0),y
+
+	; check --n
+	lda reg2
+	sbc #1
+	sta reg2
+	lda reg2+1
+	sbc #0
+	sta reg2+1
+	bne not_zero2
+	lda reg2
+	beq loop_end
+not_zero2
+
+	; increment reg0 and reg1
+	inc reg0
+	bne not_zero3
+	inc reg0+1
+not_zero3
+	inc reg1
+	bne not_zero4
+	inc reg1+1
+not_zero4
+
+	; loop
+	bcs loop
+loop_end
+	
+	; return original dest
+	lda reg3
+	sta reg0
+	lda reg3+1
+	sta reg0+1
 	rts
 .)
