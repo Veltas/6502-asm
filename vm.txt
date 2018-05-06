@@ -1,0 +1,297 @@
+Zapp VM
+=======
+
+The core of the Zapp project design is the virtual machine, which executes the
+Zapp bytecode format, and will be reimplemented for each target architecture.
+
+The bytecode format can be loaded from a string, and should be portable between
+implementations.
+
+The hope is to implement the compiling features for Zapp's language in the
+bytecode itself, as well as eventually the interpreter and any features that can
+be implemented as such.
+
+
+VM/bytecode instructions overview
+=================================
+
+Function flow instructions
+-------------------------------
+NOP
+GOTO
+IFGOTO
+IFNOTGOTO
+RETURN
+
+Assignment instructions
+-----------------------
+TSTORE
+LSTORE
+
+Expression instructions
+-----------------------
+# Atomic expressions
+NIL
+TRUE
+INTEGER
+STRING
+LIST
+RECORD
+CLOSURE
+LLOAD
+UPVALUE
+
+# Unary operators
+NOT
+MINUS
+
+# Binary operators
+ADD
+SUB
+MUL
+IDIV
+REM
+EQ
+NEQ
+GT
+LT
+TLOAD
+
+# Function call
+CALL
+TAILCALL
+
+
+VM instructions in detail
+=========================
+
+NOP
+---
+00
+
+No effect, continue to next.
+
+GOTO nnnn
+-------
+10 nn nn
+
+Next execution position to be a bytecode offset of the current function given in
+$1.
+
+IFGOTO nnnn
+-----------
+11 nn nn
+
+Pop 1 stack entry, if the entry is *not* NIL then next execution position to be
+a bytecode offset of the current function given in $1.
+
+IFNOTGOTO nnnn
+--------------
+12 nn nn
+
+Pop 1 stack entry, if the entry is NIL then next execution position to be a
+bytecode offset of the current function given in $1.
+
+RETURN nn
+---------
+13 nn
+
+End execution of the current function, callstack is reduced by the top function,
+attempts to return the top $1 positions of stack in order to the calling
+function, see CALL.
+
+TSTORE nn
+---------
+20 nn
+
+Pops 3*$1 stack entries. First $1 are tables, then $1 keys, then $1 values.
+Assignments table[key]=value are performed in order for all $1 triplets.
+
+LSTORE nnnn
+-----------
+21 nn nn
+
+Pops 1 entry, which is assigned to local $1 of the current context.
+
+NIL
+---
+30
+
+Pushes a NIL onto the stack.
+
+TRUE
+----
+31
+
+Pushes a TRUE onto the stack.
+
+INTEGER nnnn
+------------
+32 nn nn
+
+Pushes $1 as an integer onto the stack.
+
+STRING nnnn
+-----------
+33 nn nn
+
+Pushes the chunk's string cache entry $1 as a string onto the stack.
+
+TABLE
+-----
+34
+
+Pushes a new (empty) table onto the stack.
+
+LIST nnnn
+---------
+35 nn nn
+
+Pops $1 entries from the stack, and stores them in a new list-style table with
+ascending integer indices 0, 1, 2, ... and pushes this on the stack.
+
+RECORD nnnn
+-----------
+36 nn nn
+
+Pops 2*$1 entries from the stack, and uses them as contiguous key-value pairs to
+initialize a new record-style table, and pushes the result to stack.
+
+CLOSURE nnnn
+------------
+37 nn nn
+
+Pushes a new closure using the chunk function $1 as a prototype.
+
+LLOAD nnnn
+----------
+38 nn nn
+
+Pushes the value of the current function's local $1 on the stack.
+
+UPVALUE nnnn
+------------
+39 nn nn
+
+Pushes the value of the current function's upvalue $1 on the stack.
+
+NOT
+---
+40
+
+Pops one value from the stack, and pushes NIL if it was not NIL, and TRUE
+otherwise.
+
+MINUS
+-----
+41
+
+Pops one value from the stack, and pushes the result of multiplying by -1 if it
+was a number, or raises an error otherwise.
+
+ADD
+---
+50
+
+Pops two values from the stack, and pushes the result of adding them together if
+they were numbers, and raises an error otherwise.
+
+SUB
+---
+51
+
+Pops two values from the stack, and pushes the result of subtracting the second
+from the first if they were numbers, and raises an error otherwise.
+
+MUL
+---
+52
+
+Pops two values from the stack, and pushes the result of multiplying them if
+they were numbers, and raises an error otherwise.
+
+IDIV
+----
+53
+
+Pops two values from the stack, and pushes the result of dividing the first by
+the second with integer division if they were numbers, and raises an error
+otherwise or if the second number was zero.
+
+REM
+---
+54
+
+Pops two values from the stack, and pushes the remainder of result of dividing
+the first by the second with integer division if they were numbers, and raises
+an error otherwise or if the second number was zero.
+
+EQ
+--
+55
+
+Pops two values from the stack, and pushes TRUE if they are compatible types
+and compare equal, or NIL otherwise. Distinct table instances compare unequal
+even with the same structure and contents.
+
+NEQ
+---
+56
+
+Same as EQ but with opposite result.
+
+GT
+--
+57
+
+TODO
+
+GTE
+---
+58
+
+TODO
+
+LT
+--
+59
+
+TODO
+
+LTE
+---
+5A
+
+TODO
+
+TLOAD
+-----
+5B
+
+Pops two items from the stack: a table and key, and pushes table[key].
+
+CALL nn NN
+----------
+60 nn NN
+
+Pops 1+$1 items from the stack, and then pushes $2 returned results from
+executing that function in a new context with the popped stack values assigned
+as the first parameters in-order. If less parameters than the function takes are
+given, the rest are initialised to NIL. If more parameters than the function
+takes are given, those additional values are ignored. If more return values are
+given than the CALL instruction requests the rest are ignored. If less return
+values are given than the CALL instruction requests the rest of the pushed
+entries are NIL.
+
+See RETURN
+
+TAILCALL nn
+-----------
+61 nn
+
+Pops 1+$1 items from the stack, the first is the function to go to, and the rest
+used to set the parameters of the function to be executed (extras ignored, too
+few given results in the rest being NIL), and execution carries on at the start
+of that function. The current function call stack entry is replaced with this
+next function, and is also marked as a tail-call, which is useful for analysing
+the call stack in a backtrace but does not affect the VM's execution otherwise.

@@ -1,0 +1,122 @@
+Zapp
+====
+
+Zapp is a project to write a language and VM designed for 8-bit computers.
+
+
+Tokens
+------
+
+comments: from # to end of line
+
+LET
+TRUE
+NIL
+&& || + - ( ) * // % [ ] = , ! < > <= >= !=
+IF
+ELIF
+ELSE
+FOR
+IN
+WHILE
+DO
+BREAK
+FUNC
+RETURN
+TRY
+CATCH
+
+
+Types
+-----
+
+nil
+integer - 16-bit integer
+float (in future?)
+true
+string - first-class string type
+function - Zapp closure, or binary function
+table - fully associative array, pass-by-reference
+
+
+State
+-----
+
+nil:       no state
+integer:   16-bit integer
+float:     potentially 12-bit, potentially 16-bit, potentially using IEEE
+true:      no state
+string:    address of representative string in memory. string in memory: string,
+           hash?, reference count
+function:  whether is bfunction, if not: upvalues, address of representative
+           function in memory, references fn in memory: bytecode, constants,
+           locals, upvalue prototypes
+table:     address of representative table in memory. table in memory:
+           associative array, stores keys and associated values, nil can't be
+           used as a key, and effectively 'clears' an entry as a value
+
+
+Bytecode
+--------
+
+Details in vm.txt
+
+FUNC factorial(n)
+  IF n == 0
+    RETURN 1
+  RETURN n * factorial(n-1)
+
+
+local func factorial(n)
+ if n == 0 then
+  return 1
+ end
+ return n * factorial(n-1)
+end
+
+
+function entry: chunk, 0 params, 0 locals, 1 upvalue
+params+locals:
+upvalues:
+	0: 'ENV'
+bytecode:
+	0: FUNCTION (factorial-record)
+	1: STR 'factorial'
+	2: UPVALUE 0
+	3: TSTORE
+	4: RETURN 0
+
+function entry: factorial-record, 1 param, 1 local, 1 upvalue
+params+locals:
+	0:  n
+upvalues:
+	0:  'ENV'
+bytecode:
+	0:  INTEGER 0
+	1:  LOCAL 0
+	2:  EQU
+	3:  IFNOTGOTO 6
+	4:  INTEGER 1
+	5:  RETURN 1
+	6:  INTEGER 1
+	7:  LOCAL 0
+	8:  SUB
+	9:  STR 'factorial'
+	10: UPVALUE 0
+	11: TLOAD
+	12: CALL 1 1
+	13: LOCAL 0
+	14: MUL
+	15: RETURN 1
+
+local _ENV
+str "factorial"
+
+# assignment
+function 1 "n" 1
+	int 0
+	loc 0
+	equ
+	ifgoto 0
+	$0
+end
