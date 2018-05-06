@@ -62,3 +62,4 @@ dbp	.dsb 2
 
 #include "cpu-util.s"
 #include "string.s"
+#include "util.s"
