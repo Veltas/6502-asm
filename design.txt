@@ -42,6 +42,11 @@ table - fully associative array, pass-by-reference
 State
 -----
 
+Levels:
+state    - overall state of VM, contains string cache, all GC'd objects, chunks
+chunk    - state for a chunk, with all its functions
+function - state for a function
+
 nil:       no state
 integer:   16-bit integer
 float:     potentially 12-bit, potentially 16-bit, potentially using IEEE
