@@ -1,16 +1,15 @@
 START = 1280
-PROJ = test
 
 .PHONY: all
-all: $(PROJ).bin $(PROJ).tap #$(PROJ).dsk
+all: zapp.tap #zapp.dsk
 
-%.bin: %.s
+zapp.bin: obj.s
 	xa -M -bt $(START) -DPROG_START=$(START) -l$@.sym -o $@ $<
 
-%.tap: %.bin
+zapp.tap: zapp.bin
 	header -a0 -h1 -s0 $< $@ $(START)
 
-%.dsk: %.tap
+zapp.dsk: zapp.tap
 	tap2dsk -n$(PROJ) $< $@
 
 .PHONY: clean
