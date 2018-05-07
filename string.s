@@ -84,13 +84,11 @@ memcpy
 .(
 	; return immediately if n is zero
 	lda reg2
-	bne not_zero
-	lda reg2+1
+	ora reg2+1
 	bne not_zero
 	rts
 not_zero
 
-	; save original dest
 	lda reg0
 	sta reg3
 	lda reg0+1
@@ -101,24 +99,22 @@ not_zero
 loop
 	; transfer
 	lda (reg1),y
-	sta (reg0),y
+	sta (reg3),y
 
 	; check --n
 	lda reg2
-	sbc #1
-	sta reg2
-	lda reg2+1
-	sbc #0
-	sta reg2+1
-	bne not_zero2
+	bne no_carry
+	dec reg2+1
+no_carry
+	dec reg2
 	lda reg2
+	ora reg2+1
 	beq loop_end
-not_zero2
 
-	; increment reg0 and reg1
-	inc reg0
+	; increment reg3 and reg1
+	inc reg3
 	bne not_zero3
-	inc reg0+1
+	inc reg3+1
 not_zero3
 	inc reg1
 	bne not_zero4
@@ -130,9 +126,5 @@ not_zero4
 loop_end
 	
 	; return original dest
-	lda reg3
-	sta reg0
-	lda reg3+1
-	sta reg0+1
 	rts
 .)
