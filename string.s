@@ -6,45 +6,41 @@
 	.text
 memset
 .(
-	; store dest
-	jsr push_reg0
+	lda reg0
+	sta reg3
+	lda reg0+1
+	sta reg3+1
 
-	; for (; n != 0; --n, ++dest)
-	; on first loop:
-	; 0 -> y
-	; c -> a
-	lda reg2
-	bne not_zero
-	lda reg2+1
-	beq loop_end
-not_zero
+	sec
 	ldy #0
+	; for (; n != 0; --n, ++dest)
+	lda reg2
+	ora reg2+1
+	beq loop_end
+loop
+	; a -> (dest)
 	lda reg1
-loop_start
-		; a -> (dest)
-		sta (reg0), y
+	sta (reg3), y
 
-		; --n
-		ldx reg2
-		bne dec_no_carry
-		dec reg2+1
+	; --n
+	ldx reg2
+	bne dec_no_carry
+	dec reg2+1
 dec_no_carry
-		dec reg2
+	dec reg2
 
-		; loop condition
-		bne loop_cont
-		ldx reg2+1
-		beq loop_end
-loop_cont
+	; loop condition
+	lda reg2
+	ora reg2+1
+	beq loop_end
 
-		; ++dest
-		inc reg0
-		bne loop_start
-		inc reg0+1
-		bne loop_start
+	; ++dest
+	inc reg3
+	bne loop
+	inc reg3+1
+	bcs loop
 loop_end
 	; return dest
-	jsr pull_reg0
 	rts
 .)
 
