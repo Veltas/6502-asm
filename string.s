@@ -60,13 +60,13 @@ strcpy
 loop
 	; transfer character
 	lda (reg1),y
-	sta (reg0),y
+	sta (reg2),y
 	; stop if nul character
 	beq loop_end
 	; increment pointers, loop
-	inc reg0
+	inc reg2
 	bne skip_inc
-	inc reg0+1
+	inc reg2+1
 skip_inc
 	inc reg1
 	bne loop
@@ -74,10 +74,6 @@ skip_inc
 	bcs loop
 loop_end
 
-	lda reg2
-	sta reg0
-	lda reg2+1
-	sta reg0+1
 	rts
 .)
 
