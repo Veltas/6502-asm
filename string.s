@@ -4,41 +4,58 @@
 ; void *memset(void *dest, int c, size_t n) ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	.text
-memset
++memset
 .(
 	lda reg0
 	sta reg3
 	lda reg0+1
 	sta reg3+1
 
-	sec
+	; skip if MSB(n) == 0
+	lda reg2+1
+	beq fast_loop_end
 	ldy #0
-	; for (; n != 0; --n, ++dest)
-	lda reg2
-	ora reg2+1
-	beq loop_end
-loop
-	; a -> (dest)
 	lda reg1
+fast_loop
+	ldx #32
+inner_loop
 	sta (reg3), y
+	iny
+	sta (reg3), y
+	iny
+	sta (reg3), y
+	iny
+	sta (reg3), y
+	iny
+	sta (reg3), y
+	iny
+	sta (reg3), y
+	iny
+	sta (reg3), y
+	iny
+	sta (reg3), y
+	iny
+	dex
+	bne inner_loop
 
-	; --n
-	ldx reg2
-	bne dec_no_carry
-	dec reg2+1
-dec_no_carry
-	dec reg2
-
-	; loop condition
-	lda reg2
-	ora reg2+1
-	beq loop_end
-
-	; ++dest
-	inc reg3
-	bne loop
 	inc reg3+1
-	bcs loop
+	dec reg2+1
+	bne fast_loop
+fast_loop_end
+
+	; skip if n == 0
+	ldy reg2
+	beq loop_end
+	dey
+	beq loop_last
+	sec
+	lda reg1
+loop
+	sta (reg3), y
+	dey
+	bne loop
+loop_last
+	sta (reg3), y
 loop_end
 	; return dest
 	rts
@@ -48,7 +65,7 @@ loop_end
 ; char *strcpy(char *dest, const char *src) ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	.text
-strcpy
++strcpy
 .(
 	lda reg0
 	sta reg2
@@ -80,7 +97,8 @@ loop_end
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; void *memcpy(void *dest, const void *src, size_t n) ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-memcpy
+	.text
++memcpy
 .(
 	; return immediately if n is zero
 	lda reg2
