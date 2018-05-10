@@ -75,7 +75,7 @@ not_less2
 	sta reg0+1
 	lda reg1
 	ldy #0
-	lda (reg0),y
+	sta (reg0),y
 
 	; continue loop
 	jmp loop
