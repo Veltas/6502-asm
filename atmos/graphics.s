@@ -37,7 +37,8 @@
 	.text
 +TxGetRow
 .(
-	asl reg0
+	lda reg0
+	asl
 	tax
 	lda rowLookup,x
 	sta reg0
