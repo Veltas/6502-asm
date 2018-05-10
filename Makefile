@@ -3,7 +3,7 @@ START = 1280
 .PHONY: all
 all: zapp.tap #zapp.dsk
 
-zapp.bin: *.s
+zapp.bin: *.s atmos/*.s atmos/*.inc
 	xa -M -bt $(START) -DPROG_START=$(START) -l$@.sym -o $@ obj.s
 
 zapp.tap: zapp.bin
