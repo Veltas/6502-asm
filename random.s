@@ -42,10 +42,10 @@ stateC
 	rts
 .)
 
-	.text
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 ; void RandomStep(void) ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;
+	.text
 RandomStep
 .(
 	inc stateX
