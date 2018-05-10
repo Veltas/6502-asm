@@ -11,7 +11,7 @@
 +main
 .(
 	; Reserve stack
-	; 0 word: row address
+	; 0 word: screen address
 	sec
 	lda dsp
 	sbc #2
