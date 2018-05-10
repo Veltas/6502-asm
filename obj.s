@@ -63,3 +63,6 @@ dbp	.dsb 2
 #include "cpu-util.s"
 #include "string.s"
 #include "util.s"
+#include "random.s"
+#include "atmos/graphics.s"
+#include "main.s"
