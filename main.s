@@ -56,7 +56,6 @@ not_less2
 	clc
 	adc (dsp),y
 	sta (dsp),y
-	lda #0
 	iny
 	lda (dsp),y
 	adc #0
