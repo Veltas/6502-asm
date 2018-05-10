@@ -12,11 +12,13 @@
 .(
 	; Reserve stack
 	; 0 word: row address
+	sec
 	lda dsp
-	bne no_carry
-	dec dsp+1
-no_carry
-	dec dsp
+	sbc #2
+	sta dsp
+	lda dsp+1
+	sbc #0
+	sta dsp+1
 
 	; Clear the screen with set-black-paper
 	lda #16
