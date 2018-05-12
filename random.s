@@ -60,7 +60,8 @@ RandomStep
 	adc stateA
 	sta stateB
 
-	lsr stateB
+	lda stateB
+	lsr
 	eor stateA
 	clc
 	adc stateC
