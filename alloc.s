@@ -436,12 +436,45 @@ no_carry
 	dex
 	bne multiply_loop
 
-	; return malloc(reg2)
+	; reserve stack
+	; +0: word, n*m
+	lda dsp
+	sec
+	sbc #2
+	sta dsp
+	bcs no_borrow
+	dec dsp+1
+no_borrow
+
+	; reg0 = malloc(reg2)
 	lda reg2
 	sta reg0
+	ldy #0
+	sta (dsp), y
 	lda reg2+1
 	sta reg0+1
+	iny
+	sta (dsp), y
 	jsr malloc
+
+	; return memset(reg0, 0, n*m)
+	lda #0
+	sta reg1
+	ldy #0
+	lda (dsp), y
+	sta reg2
+	iny
+	lda (dsp), y
+	sta reg2+1
+	jsr memset
+	; restore stack
+	lda dsp
+	clc
+	adc #2
+	sta dsp
+	bcc no_carry2
+	adc #0
+no_carry2
 	rts
 .)
 
