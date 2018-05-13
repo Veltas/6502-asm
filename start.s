@@ -10,6 +10,9 @@ startup
 	lda #> DSP_START
 	sta dsp+1
 
+	; Initializers
+	jsr InitAlloc
+
 	; call main
 	jsr main
 

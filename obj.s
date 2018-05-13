@@ -56,7 +56,7 @@ dbp	.dsb 2
 ;                 store there.
 ;               - If variadic, callee cleans stack then puts result on stack.
 
-#define DSP_START  $9800
+#include "atmos/addrs.inc"
 
 #include "start.s"
 
