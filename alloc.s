@@ -174,6 +174,90 @@ bad_size
 	.text
 RemoveFree
 .(
+	; reserve stack
+	; 0: word, block
+	lda dsp
+	sec
+	sbc #2
+	sta dsp
+	bcs no_borrow
+	dec dsp+1
+no_borrow
+
+	; store block
+	lda reg0
+	ldy #0
+	sta (dsp), y
+	lda reg0+1
+	iny
+	sta (dsp), y
+
+	; reg1 = size
+	ldy #0
+	lda (reg0), y
+	sta reg1
+	iny
+	lda (reg0), y
+	sta reg1+1
+	; reg2 = next
+	iny
+	lda (reg0), y
+	sta reg2
+	iny
+	lda (reg0), y
+	sta reg2+1
+	; reg3 = prev
+	iny
+	lda (reg0), y
+	sta reg3
+	iny
+	lda (reg0), y
+	sta reg3+1
+
+	; prev->next = next
+	lda reg2
+	ldy #2
+	sta (reg3), y
+	lda reg2+1
+	iny
+	sta (reg3), y
+	; next->prev = prev
+	lda reg3
+	ldy #4
+	sta (reg2), y
+	lda reg3+1
+	iny
+	sta (reg2), y
+
+	; free space total -= size
+	lda freeSpace
+	sec
+	sbc reg1
+	sta freeSpace
+	lda freeSpace+1
+	sbc reg1+1
+	sta freeSpace+1
+
+	; update block border
+	lda #1
+	sta reg2
+	jsr SetBorder
+
+	; return block
+	ldy #0
+	lda (dsp), y
+	sta reg0
+	iny
+	lda (dsp), y
+	sta reg0+1
+	lda dsp
+	clc
+	adc #2
+	sta dsp
+	bcc no_carry
+	inc dsp+1
+no_carry
+	rts
 .)
 
 ; For a block, returns the location of the contiguous free block if this becomes
@@ -188,12 +272,15 @@ AddFreeDims
 .(
 .)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; void *AddFree(void *block) ;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; void AddFree(void *block) ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	.text
 AddFree
 .(
+	; nBlock, n = AddFreeDims(block)
+	; SetBorder(nBlock, n, 0)
+
 .)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
